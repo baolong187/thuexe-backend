@@ -35,7 +35,7 @@ class BillController extends BaseController
                 return $query->where('confirmStatus','like', '%'. $status.'%');
             })->when(!empty($customer), function($query) use($customer) {
                 return $query->where('customerId',$customer->id);
-            })->get();
+            })->orderBy('created_at','DESC')->get();
         }
         else
         {
@@ -47,7 +47,7 @@ class BillController extends BaseController
                 return $query->whereDate('endDate','<=',$ed);
             })->when(!empty($carId), function($query) use($carId){
                 return $query->where('carId',$carId);
-            })->get();
+            })->orderBy('created_at','DESC')->get();
         }
         return $this->response(BillResource::collection($bill));
     }
@@ -129,7 +129,7 @@ class BillController extends BaseController
         $car = Car::all()->count();
         $customer = Customer::all()->count();
         $bill = Bill::where('confirmStatus','pending')->count();
-        $revenue = Bill::where('paymentStatus','paid')->where('confirmStatus','confirm')->sum('totalPrice');
+        $revenue = Bill::sum('totalPrice');
         $summary = collect([
             [
                 'car' => $car, 
@@ -150,12 +150,22 @@ class BillController extends BaseController
     }
 
     public function revenueByCar() {
-        $bills = Bill::select("carId")->selectRaw("SUM(totalPrice) as total_pirce")->groupBy('carId')->orderBy('total_pirce','DESC')->take(5)->geT();
+        $bills = Bill::select("carId")->selectRaw("SUM(totalPrice) as total_pirce")->groupBy('carId')->orderBy('total_pirce','DESC')->take(5)->get();
         foreach($bills as $bill) {
             $car = Car::where('id',$bill->carId)->select("name","licensePlate")->first();
             $bill->car_name = $car->name;
             $bill->licensePlate = $car->licensePlate;
         }
         return $this->response($bills);
+    }
+
+    public function revenueByMonth() {
+        $bills = Bill::selectRaw("SUM(totalPrice) as total_pirce")
+                        ->selectRaw("MIN(DATE_FORMAT(created_at, '%m-%Y')) as new_date, 
+                                    YEAR(created_at) AS year, 
+                                    MONTH(created_at) AS month")
+                        ->groupBy('year','month')
+                        ->get();
+        return $bills;
     }
 }

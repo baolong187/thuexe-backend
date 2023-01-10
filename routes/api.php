@@ -56,4 +56,5 @@ Route::prefix('statistical')->group(function () {
     Route::get('summary', [\App\Http\Controllers\BillController::class, 'summary']);
     Route::get('recent-bill', [\App\Http\Controllers\BillController::class, 'recentBill']);
     Route::get('revenue-car', [\App\Http\Controllers\BillController::class, 'revenueByCar']);
+    Route::get('revenue-month', [\App\Http\Controllers\BillController::class, 'revenueByMonth']);
 });

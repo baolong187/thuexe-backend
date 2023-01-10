@@ -29,7 +29,7 @@ class CarController extends BaseController
             return $query->where('name','LIKE', "%{$name}%");
         })->when(!empty($status), function($query) use($status) {
             return $query->where('status',$status);
-        })->paginate($limit); 
+        })->orderBy('created_at','DESC')->paginate($limit); 
 
         return $this->response(CarResource::collection($car));
     }
